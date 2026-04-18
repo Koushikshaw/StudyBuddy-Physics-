@@ -236,19 +236,16 @@ if "thread_id" not in st.session_state:
 with st.sidebar:
 
     # ── Session badge at top ──
-    col1, col2 = st.columns([3, 2])
-    with col1:
-        st.markdown(f"""
-        <div class="session-badge">
-            <span class="session-badge-dot"></span>
-            Session &nbsp;<span class="session-id">{st.session_state.thread_id}</span>
-        </div>
-        """, unsafe_allow_html=True)
-    with col2:
-        if st.button("🗑️ New chat"):
-            st.session_state.messages = []
-            st.session_state.thread_id = str(uuid.uuid4())[:8]
-            st.rerun()
+    st.markdown(f"""
+    <div class="session-badge">
+        <span class="session-badge-dot"></span>
+        Session &nbsp;<span class="session-id">{st.session_state.thread_id}</span>
+    </div>
+    """, unsafe_allow_html=True)
+    if st.button("🗑️ New chat", use_container_width=True):
+        st.session_state.messages = []
+        st.session_state.thread_id = str(uuid.uuid4())[:8]
+        st.rerun()
 
     st.divider()
 
