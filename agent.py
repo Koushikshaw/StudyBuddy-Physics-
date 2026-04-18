@@ -1,7 +1,7 @@
 """
-agent.py — Shared agent module for Physics Study Buddy
-This file contains the CapstoneState, all node functions,
-and the graph assembly. Imported by capstone_streamlit.py.
+agent.py — Physics Study Buddy
+Node names all end with _node to match graph registration.
+Uses chromadb DefaultEmbeddingFunction instead of sentence_transformers.
 """
 
 import os
@@ -14,15 +14,15 @@ from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from sentence_transformers import SentenceTransformer
 import chromadb
+from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
 
 load_dotenv()
 
 # ─────────────────────────────────────────────────────────
 # CONSTANTS
 # ─────────────────────────────────────────────────────────
-PDF_FOLDER = "pdfs"   # folder containing your physics PDF files
+PDF_FOLDER = "pdfs"
 
 DOMAIN_NAME = "Physics Study Buddy"
 DOMAIN_DESCRIPTION = (
@@ -51,26 +51,18 @@ MAX_EVAL_RETRIES = 2
 # STATE DEFINITION
 # ─────────────────────────────────────────────────────────
 class CapstoneState(TypedDict):
-    # Input
     question: str
-    # Memory
     messages: List[dict]
-    # Routing
-    route: str          # "retrieve" | "memory_only" | "tool"
+    route: str          # "retrieve" | "memory_only" | "tool" | "chat"
     intent: str         # "calculator"|"convert"|"solve"|"compare"|"plan"|"simplify"|"search"
-    # RAG
     retrieved: str
     sources: List[str]
-    # Tool
     tool_name: str
     tool_input: str
     tool_result: str
-    # Answer
     answer: str
-    # Quality control
     faithfulness: float
     eval_retries: int
-    # Physics-specific
     formula_used: str
     calculation_steps: str
     units: str
@@ -79,23 +71,22 @@ class CapstoneState(TypedDict):
 
 
 # ─────────────────────────────────────────────────────────
-# MODEL + KB LOADER  (called once by Streamlit's @st.cache_resource)
+# MODEL + KB LOADER
 # ─────────────────────────────────────────────────────────
 def load_llm_and_kb():
-    """
-    Returns (llm, embedder, chroma_collection).
-    Loads PDFs from the `pdfs/` folder, splits, embeds, and
-    stores in a fresh in-memory ChromaDB collection.
-    """
+    """Returns (llm, embedder, chroma_collection)."""
     llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0)
-    embedder = SentenceTransformer("all-MiniLM-L6-v2")
+    embedder = DefaultEmbeddingFunction()
 
     client = chromadb.Client()
     try:
-        client.delete_collection("capstone_kb")
+        client.delete_collection("physics_kb")
     except Exception:
         pass
-    collection = client.create_collection("capstone_kb")
+    collection = client.create_collection(
+        "physics_kb",
+        embedding_function=embedder,
+    )
 
     all_docs = []
     if os.path.isdir(PDF_FOLDER):
@@ -123,7 +114,6 @@ def load_llm_and_kb():
 
     collection.add(
         documents=texts,
-        embeddings=embedder.encode(texts).tolist(),
         ids=[f"id_{i}" for i in range(len(texts))],
         metadatas=metas,
     )
@@ -135,19 +125,28 @@ def load_llm_and_kb():
 # NODE FUNCTIONS
 # ─────────────────────────────────────────────────────────
 def make_nodes(llm, embedder, collection):
-    """
-    Factory that returns node functions bound to llm/embedder/collection.
-    """
+    """Factory returning node functions. All dict keys end with _node."""
 
-    # ── Node 1: Memory ────────────────────────────────────
+    # ── Node 1: memory_node ───────────────────────────────
     def memory_node(state: CapstoneState) -> dict:
         msgs = state.get("messages", [])
         msgs = msgs + [{"role": "user", "content": state["question"]}]
         if len(msgs) > 6:
             msgs = msgs[-6:]
-        return {"messages": msgs}
+        return {
+            "messages": msgs,
+            "answer": "",
+            "retrieved": "",
+            "sources": [],
+            "tool_name": "",
+            "tool_result": "",
+            "route": "",
+            "intent": "",
+            "faithfulness": 0.0,
+            "eval_retries": 0,
+        }
 
-    # ── Node 2: Router ────────────────────────────────────
+    # ── Node 2: router_node ───────────────────────────────
     def router_node(state: CapstoneState) -> dict:
         question = state["question"]
         messages = state.get("messages", [])
@@ -164,6 +163,7 @@ Options:
 - retrieve    → physics concepts, definitions, derivations, formulas from knowledge base
 - memory_only → question refers to previous conversation (e.g. "what did you just say?")
 - tool        → computation, comparison, or external info needed
+- chat        → conversational message (greetings, thanks, "ok", "good", acknowledgements)
 
 IMPORTANT: If question has a false assumption, choose "retrieve" to correct it.
 
@@ -178,7 +178,7 @@ Use tool when:
 Recent conversation: {recent}
 Current question: {question}
 
-Reply with ONLY ONE WORD: retrieve OR memory_only OR tool
+Reply with ONLY ONE WORD: retrieve OR memory_only OR tool OR chat
 """
         response = llm.invoke(prompt)
         decision = response.content.strip().lower()
@@ -186,12 +186,14 @@ Reply with ONLY ONE WORD: retrieve OR memory_only OR tool
             decision = "memory_only"
         elif "tool" in decision:
             decision = "tool"
+        elif "chat" in decision:
+            decision = "chat"
         else:
             decision = "retrieve"
         return {"route": decision}
 
-    # ── Node 3a: Intent classifier ─────────────────────────
-    def intent_node(state: CapstoneState) -> dict:
+    # ── Node 3: intent_classifier_node ───────────────────
+    def intent_classifier_node(state: CapstoneState) -> dict:
         question = state["question"]
         prompt = f"""
 Classify the intent of this physics question into ONE word:
@@ -214,10 +216,9 @@ Reply with ONLY one word: calculator, convert, solve, compare, plan, simplify, o
             intent = "search"
         return {"intent": intent}
 
-    # ── Node 3b: Retrieval ─────────────────────────────────
+    # ── Node 4: retrieval_node ────────────────────────────
     def retrieval_node(state: CapstoneState) -> dict:
-        q_emb = embedder.encode([state["question"]]).tolist()
-        results = collection.query(query_embeddings=q_emb, n_results=3)
+        results = collection.query(query_texts=[state["question"]], n_results=3)
         chunks = results.get("documents", [[]])[0]
         metas  = results.get("metadatas", [[]])[0]
         if not chunks:
@@ -228,10 +229,11 @@ Reply with ONLY one word: calculator, convert, solve, compare, plan, simplify, o
         )
         return {"retrieved": context, "sources": topics}
 
+    # ── Node 5: skip_retrieval_node ───────────────────────
     def skip_retrieval_node(state: CapstoneState) -> dict:
         return {"retrieved": "", "sources": []}
 
-    # ── Node 4: Tool ──────────────────────────────────────
+    # ── Node 6: tool_node ─────────────────────────────────
     def tool_node(state: CapstoneState) -> dict:
         question = state["question"]
         intent   = state.get("intent", "").lower()
@@ -241,7 +243,7 @@ Reply with ONLY one word: calculator, convert, solve, compare, plan, simplify, o
         if intent == "search":
             tool_name = "web_search"
             try:
-                from ddgs import DDGS
+                from duckduckgo_search import DDGS
                 with DDGS() as ddgs:
                     results = list(ddgs.text(question, max_results=3))
                 tool_result = "\n".join(
@@ -305,13 +307,14 @@ Reply with ONLY one word: calculator, convert, solve, compare, plan, simplify, o
 
         return {"tool_name": tool_name, "tool_result": tool_result}
 
-    # ── Node 5: Answer ────────────────────────────────────
+    # ── Node 7: answer_node ───────────────────────────────
     def answer_node(state: CapstoneState) -> dict:
         question     = state["question"]
         retrieved    = state.get("retrieved", "")
         tool_result  = state.get("tool_result", "")
         messages     = state.get("messages", [])
         eval_retries = state.get("eval_retries", 0)
+        route        = state.get("route", "retrieve")
 
         context_parts = []
         if retrieved:
@@ -319,6 +322,17 @@ Reply with ONLY one word: calculator, convert, solve, compare, plan, simplify, o
         if tool_result:
             context_parts.append(f"TOOL RESULT:\n{tool_result}")
         context = "\n\n".join(context_parts)
+
+        chat_note = ""
+        if route == "chat":
+            chat_note = "\n- If the message is conversational (greeting, thanks, acknowledgement), reply briefly and naturally in 1 sentence."
+
+        retry_note = ""
+        if eval_retries > 0:
+            retry_note = (
+                "\n\nIMPORTANT: Your previous answer was not sufficiently grounded. "
+                "Strictly ensure every statement comes from the context. No hallucination."
+            )
 
         if context:
             system_content = f"""You are a Physics Study Buddy for B.Tech students.
@@ -329,7 +343,7 @@ STRICT RULES:
 - Answer ONLY using the provided context (knowledge base or tool result)
 - DO NOT use outside knowledge
 - If the answer is not in the context, say: "I don't have that information in my knowledge base."
-- Do NOT hallucinate — be precise and educational
+- Do NOT hallucinate — be precise and educational{chat_note}
 
 FORMAT YOUR ANSWER LIKE THIS (when applicable):
 
@@ -352,18 +366,12 @@ FORMAT YOUR ANSWER LIKE THIS (when applicable):
 
 Use bullet points and clean formatting.
 
-{context}"""
+{context}{retry_note}"""
         else:
             system_content = (
                 "You are a Physics Study Buddy.\n\n"
                 "Answer using the conversation history only.\n"
-                "If unsure, say: \"I don't have that information in my knowledge base.\""
-            )
-
-        if eval_retries > 0:
-            system_content += (
-                "\n\nIMPORTANT: Your previous answer was not sufficiently grounded. "
-                "Strictly ensure every statement comes from the context. No hallucination."
+                f"If unsure, say: \"I don't have that information in my knowledge base.\"{chat_note}"
             )
 
         lc_msgs = [SystemMessage(content=system_content)]
@@ -377,7 +385,7 @@ Use bullet points and clean formatting.
         response = llm.invoke(lc_msgs)
         return {"answer": response.content}
 
-    # ── Node 6: Evaluator ─────────────────────────────────
+    # ── Node 8: eval_node ─────────────────────────────────
     def eval_node(state: CapstoneState) -> dict:
         answer  = state.get("answer", "")
         context = (state.get("retrieved", "") + "\n" + state.get("tool_result", ""))[:500]
@@ -401,7 +409,7 @@ Use bullet points and clean formatting.
 
         return {"faithfulness": score, "eval_retries": retries + 1}
 
-    # ── Node 7: Save memory ───────────────────────────────
+    # ── Node 9: save_node ─────────────────────────────────
     def save_node(state: CapstoneState) -> dict:
         msgs = state.get("messages", [])
         msgs = msgs + [{"role": "assistant", "content": state["answer"]}]
@@ -410,15 +418,15 @@ Use bullet points and clean formatting.
         return {"messages": msgs}
 
     return {
-        "memory":         memory_node,
-        "router":         router_node,
-        "intent":         intent_node,
-        "retrieval":      retrieval_node,
-        "skip_retrieval": skip_retrieval_node,
-        "tool":           tool_node,
-        "answer":         answer_node,
-        "eval":           eval_node,
-        "save":           save_node,
+        "memory_node":            memory_node,
+        "router_node":            router_node,
+        "intent_classifier_node": intent_classifier_node,
+        "retrieval_node":         retrieval_node,
+        "skip_retrieval_node":    skip_retrieval_node,
+        "tool_node":              tool_node,
+        "answer_node":            answer_node,
+        "eval_node":              eval_node,
+        "save_node":              save_node,
     }
 
 
@@ -426,61 +434,66 @@ Use bullet points and clean formatting.
 # GRAPH ASSEMBLY
 # ─────────────────────────────────────────────────────────
 def build_agent(llm, embedder, collection):
-    """Builds and compiles the LangGraph StateGraph. Returns compiled app."""
-    nodes  = make_nodes(llm, embedder, collection)
-    memory = MemorySaver()
+    nodes   = make_nodes(llm, embedder, collection)
+    memory  = MemorySaver()
     builder = StateGraph(CapstoneState)
 
-    builder.add_node("memory",      nodes["memory"])
-    builder.add_node("router",      nodes["router"])
-    builder.add_node("intent",      nodes["intent"])
-    builder.add_node("retrieve",    nodes["retrieval"])
-    builder.add_node("memory_only", nodes["skip_retrieval"])
-    builder.add_node("tool",        nodes["tool"])
-    builder.add_node("answer",      nodes["answer"])
-    builder.add_node("eval",        nodes["eval"])
-    builder.add_node("save",        nodes["save"])
+    builder.add_node("memory_node",            nodes["memory_node"])
+    builder.add_node("router_node",            nodes["router_node"])
+    builder.add_node("intent_classifier_node", nodes["intent_classifier_node"])
+    builder.add_node("retrieval_node",         nodes["retrieval_node"])
+    builder.add_node("skip_retrieval_node",    nodes["skip_retrieval_node"])
+    builder.add_node("tool_node",              nodes["tool_node"])
+    builder.add_node("answer_node",            nodes["answer_node"])
+    builder.add_node("eval_node",              nodes["eval_node"])
+    builder.add_node("save_node",              nodes["save_node"])
 
-    builder.set_entry_point("memory")
-    builder.add_edge("memory", "router")
+    builder.set_entry_point("memory_node")
+    builder.add_edge("memory_node", "router_node")
 
     def route_decision(state: CapstoneState) -> str:
         r = state.get("route", "retrieve")
         if r == "tool":
-            return "intent"
-        elif r == "memory_only":
-            return "memory_only"
-        return "retrieve"
+            return "intent_classifier_node"
+        elif r in ("memory_only", "chat"):
+            return "skip_retrieval_node"
+        return "retrieval_node"
 
     builder.add_conditional_edges(
-        "router", route_decision,
-        {"intent": "intent", "retrieve": "retrieve", "memory_only": "memory_only"},
+        "router_node",
+        route_decision,
+        {
+            "intent_classifier_node": "intent_classifier_node",
+            "retrieval_node":         "retrieval_node",
+            "skip_retrieval_node":    "skip_retrieval_node",
+        },
     )
 
-    builder.add_edge("intent",      "tool")
-    builder.add_edge("tool",        "answer")
-    builder.add_edge("retrieve",    "answer")
-    builder.add_edge("memory_only", "answer")
-    builder.add_edge("answer",      "eval")
+    builder.add_edge("intent_classifier_node", "tool_node")
+    builder.add_edge("tool_node",              "answer_node")
+    builder.add_edge("retrieval_node",         "answer_node")
+    builder.add_edge("skip_retrieval_node",    "answer_node")
+    builder.add_edge("answer_node",            "eval_node")
 
     def eval_decision(state: CapstoneState) -> str:
         score   = state.get("faithfulness", 1.0)
         retries = state.get("eval_retries", 0)
         if score >= FAITHFULNESS_THRESHOLD or retries >= MAX_EVAL_RETRIES:
-            return "save"
-        return "answer"
+            return "save_node"
+        return "answer_node"
 
     builder.add_conditional_edges(
-        "eval", eval_decision,
-        {"answer": "answer", "save": "save"},
+        "eval_node",
+        eval_decision,
+        {"answer_node": "answer_node", "save_node": "save_node"},
     )
 
-    builder.add_edge("save", END)
+    builder.add_edge("save_node", END)
     return builder.compile(checkpointer=memory)
 
 
 # ─────────────────────────────────────────────────────────
-# CONVENIENCE: ask() for notebook / testing
+# CONVENIENCE: ask()
 # ─────────────────────────────────────────────────────────
 def ask(agent_app, question: str, thread_id: str = "default") -> dict:
     config = {"configurable": {"thread_id": thread_id}}
