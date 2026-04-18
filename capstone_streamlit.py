@@ -132,14 +132,33 @@ section[data-testid="stSidebar"] {
     color: #999;
     margin: 3px 3px;
 }
-.sb-session {
-    font-size: 0.8rem;
-    color: #666;
+.session-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 1px solid #2d3561;
+    border-radius: 999px;
+    padding: 0.3rem 0.85rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #7b9cff;
+    margin-bottom: 0.5rem;
 }
-.sb-session span {
+.session-badge-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #7b9cff;
+    display: inline-block;
+}
+.session-id {
     font-family: monospace;
-    color: #888;
+    color: #aaa;
     font-size: 0.82rem;
+    text-transform: none;
+    letter-spacing: 0;
 }
 
 /* ── Buttons ── */
@@ -215,17 +234,38 @@ if "thread_id" not in st.session_state:
 # SIDEBAR
 # ─────────────────────────────────────────────────────────
 with st.sidebar:
+
+    # ── Session badge at top ──
+    col1, col2 = st.columns([3, 2])
+    with col1:
+        st.markdown(f"""
+        <div class="session-badge">
+            <span class="session-badge-dot"></span>
+            Session &nbsp;<span class="session-id">{st.session_state.thread_id}</span>
+        </div>
+        """, unsafe_allow_html=True)
+    with col2:
+        if st.button("🗑️ New chat"):
+            st.session_state.messages = []
+            st.session_state.thread_id = str(uuid.uuid4())[:8]
+            st.rerun()
+
+    st.divider()
+
+    # ── About ──
     st.markdown('<div class="sb-label">About</div>', unsafe_allow_html=True)
     st.markdown(f'<div class="sb-desc">{DOMAIN_DESCRIPTION}</div>', unsafe_allow_html=True)
 
     st.divider()
 
+    # ── Topics ──
     st.markdown('<div class="sb-label">Topics Covered</div>', unsafe_allow_html=True)
     chips = "".join(f'<span class="topic-chip">{t}</span>' for t in KB_TOPICS)
     st.markdown(chips, unsafe_allow_html=True)
 
     st.divider()
 
+    # ── Example questions ──
     st.markdown('<div class="sb-label">Try Asking</div>', unsafe_allow_html=True)
     example_questions = [
         "What is Simple Harmonic Motion?",
@@ -239,20 +279,6 @@ with st.sidebar:
     for eq in example_questions:
         if st.button(eq, key=eq):
             st.session_state._inject_question = eq
-            st.rerun()
-
-    st.divider()
-
-    col1, col2 = st.columns([3, 2])
-    with col1:
-        st.markdown(
-            f'<div class="sb-session">Session<br><span>{st.session_state.thread_id}</span></div>',
-            unsafe_allow_html=True
-        )
-    with col2:
-        if st.button("🗑️ New chat"):
-            st.session_state.messages = []
-            st.session_state.thread_id = str(uuid.uuid4())[:8]
             st.rerun()
 
 # ─────────────────────────────────────────────────────────
