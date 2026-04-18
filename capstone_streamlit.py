@@ -14,9 +14,6 @@ from agent import (
     ask,
 )
 
-# ─────────────────────────────────────────────────────────
-# PAGE CONFIG
-# ─────────────────────────────────────────────────────────
 st.set_page_config(
     page_title=DOMAIN_NAME,
     page_icon="⚛️",
@@ -28,109 +25,142 @@ st.set_page_config(
 # ─────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-/* Import font */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* Global */
 html, body, [class*="css"] {
     font-family: 'Inter', sans-serif;
 }
 
-/* Hide default streamlit header decoration */
-.stAppHeader { background: transparent !important; }
-
-/* Hero header */
+/* ── Hero ── */
 .hero {
-    padding: 2rem 0 1.2rem 0;
+    padding: 2.2rem 0 0.6rem 0;
     text-align: center;
 }
-.hero h1 {
-    font-size: 2rem;
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 1px solid #2d3561;
+    border-radius: 999px;
+    padding: 0.35rem 1rem;
+    font-size: 0.72rem;
     font-weight: 600;
-    margin: 0;
-    letter-spacing: -0.5px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #7b9cff;
+    margin-bottom: 1rem;
+}
+.hero-badge-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #7b9cff;
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+.hero h1 {
+    font-size: 2.1rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    letter-spacing: -0.8px;
+    background: linear-gradient(135deg, #ffffff 0%, #a0b4ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 .hero p {
-    color: #888;
-    font-size: 0.9rem;
-    margin-top: 0.4rem;
+    color: #777;
+    font-size: 0.88rem;
+    margin: 0 auto;
+    max-width: 480px;
+    line-height: 1.6;
 }
-
-/* Status bar */
 .status-bar {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.78rem;
-    color: #666;
-    padding: 0.4rem 0 1rem 0;
+    font-size: 0.76rem;
+    color: #555;
+    padding: 1rem 0 1.2rem 0;
     justify-content: center;
 }
 .status-dot {
-    width: 7px;
-    height: 7px;
+    width: 7px; height: 7px;
     border-radius: 50%;
     background: #22c55e;
     display: inline-block;
 }
 
-/* Chat meta line (faithfulness, route, sources) */
+/* ── Chat meta ── */
 .chat-meta {
-    font-size: 0.72rem;
-    color: #666;
-    margin-top: 0.35rem;
+    font-size: 0.74rem;
+    color: #555;
+    margin-top: 0.4rem;
     padding-left: 0.1rem;
 }
 
-/* Sidebar styling */
+/* ── Sidebar ── */
 section[data-testid="stSidebar"] {
-    background: #0f0f0f;
-    border-right: 1px solid #1e1e1e;
+    background: #0a0a0a;
+    border-right: 1px solid #1c1c1c;
 }
-.sidebar-title {
-    font-size: 0.7rem;
+.sb-label {
+    font-size: 0.68rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    color: #555;
+    letter-spacing: 1.2px;
+    color: #444;
+    margin-bottom: 0.6rem;
+    margin-top: 0.2rem;
+}
+.sb-desc {
+    font-size: 0.85rem;
+    color: #888;
+    line-height: 1.6;
     margin-bottom: 0.5rem;
 }
 .topic-chip {
     display: inline-block;
-    background: #1a1a1a;
-    border: 1px solid #2a2a2a;
-    border-radius: 4px;
-    padding: 2px 8px;
-    font-size: 0.72rem;
-    color: #aaa;
-    margin: 2px 2px;
+    background: #141414;
+    border: 1px solid #242424;
+    border-radius: 5px;
+    padding: 3px 10px;
+    font-size: 0.78rem;
+    color: #999;
+    margin: 3px 3px;
+}
+.sb-session {
+    font-size: 0.8rem;
+    color: #666;
+}
+.sb-session span {
+    font-family: monospace;
+    color: #888;
+    font-size: 0.82rem;
 }
 
-/* Example question buttons */
+/* ── Buttons ── */
 div[data-testid="stButton"] button {
-    background: #111 !important;
-    border: 1px solid #222 !important;
-    color: #bbb !important;
-    font-size: 0.78rem !important;
-    padding: 0.3rem 0.6rem !important;
+    background: #0f0f0f !important;
+    border: 1px solid #1e1e1e !important;
+    color: #aaa !important;
+    font-size: 0.82rem !important;
+    padding: 0.35rem 0.7rem !important;
     border-radius: 6px !important;
     text-align: left !important;
     width: 100% !important;
-    transition: border-color 0.2s, color 0.2s !important;
+    transition: all 0.15s ease !important;
 }
 div[data-testid="stButton"] button:hover {
-    border-color: #444 !important;
+    border-color: #3d3d3d !important;
     color: #fff !important;
+    background: #161616 !important;
 }
 
-/* Chat input */
-div[data-testid="stChatInput"] {
-    border-top: 1px solid #1e1e1e;
-    padding-top: 0.5rem;
-}
-
-/* Divider */
-hr { border-color: #1e1e1e !important; }
+hr { border-color: #1a1a1a !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -142,7 +172,6 @@ def get_agent():
     llm, embedder, collection = load_llm_and_kb()
     agent_app = build_agent(llm, embedder, collection)
     return agent_app, collection
-
 
 try:
     agent_app, collection = get_agent()
@@ -157,16 +186,20 @@ except Exception as e:
     st.stop()
 
 # ─────────────────────────────────────────────────────────
-# HERO HEADER
+# HERO
 # ─────────────────────────────────────────────────────────
 st.markdown(f"""
 <div class="hero">
-    <h1>⚛️ {DOMAIN_NAME}</h1>
+    <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        AI · Physics · B.Tech
+    </div>
+    <h1>{DOMAIN_NAME}</h1>
     <p>{DOMAIN_DESCRIPTION}</p>
 </div>
 <div class="status-bar">
     <span class="status-dot"></span>
-    <span>{kb_count} chunks indexed &nbsp;·&nbsp; Powered by Groq + LangGraph</span>
+    <span>{kb_count} chunks indexed &nbsp;·&nbsp; Groq LLaMA 3.3 · LangGraph · RAG</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -182,18 +215,18 @@ if "thread_id" not in st.session_state:
 # SIDEBAR
 # ─────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown('<div class="sidebar-title">Physics Study Buddy</div>', unsafe_allow_html=True)
-    st.markdown(f'<div style="font-size:0.78rem;color:#666;margin-bottom:1rem;">{DOMAIN_DESCRIPTION}</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sb-label">About</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="sb-desc">{DOMAIN_DESCRIPTION}</div>', unsafe_allow_html=True)
 
     st.divider()
 
-    st.markdown('<div class="sidebar-title">Topics Covered</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sb-label">Topics Covered</div>', unsafe_allow_html=True)
     chips = "".join(f'<span class="topic-chip">{t}</span>' for t in KB_TOPICS)
     st.markdown(chips, unsafe_allow_html=True)
 
     st.divider()
 
-    st.markdown('<div class="sidebar-title">Try Asking</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sb-label">Try Asking</div>', unsafe_allow_html=True)
     example_questions = [
         "What is Simple Harmonic Motion?",
         "Explain damped harmonic motion",
@@ -210,11 +243,12 @@ with st.sidebar:
 
     st.divider()
 
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns([3, 2])
     with col1:
-        st.markdown(f'<div style="font-size:0.7rem;color:#555;">Session</div>'
-                    f'<div style="font-size:0.78rem;color:#888;font-family:monospace;">{st.session_state.thread_id}</div>',
-                    unsafe_allow_html=True)
+        st.markdown(
+            f'<div class="sb-session">Session<br><span>{st.session_state.thread_id}</span></div>',
+            unsafe_allow_html=True
+        )
     with col2:
         if st.button("🗑️ New chat"):
             st.session_state.messages = []
@@ -254,7 +288,7 @@ if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
 
     with st.chat_message("assistant"):
-        with st.spinner("🔭 Thinking…"):
+        with st.spinner("Thinking…"):
             result = ask(agent_app, user_input, thread_id=st.session_state.thread_id)
             answer = result.get("answer", "Sorry, I could not generate an answer.")
 
