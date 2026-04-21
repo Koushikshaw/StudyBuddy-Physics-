@@ -174,15 +174,30 @@ section[data-testid="stSidebar"] > div {
 }
 
 /* ── Chat input ── */
-[data-testid="stChatInput"] textarea {
+[data-testid="stBottom"] {
+    background: #1a1a1a !important;
+    border-top: 1px solid #2e2e2e !important;
+    padding: 0.75rem 1rem !important;
+}
+[data-testid="stChatInput"] {
     background: #252525 !important;
     border: 1px solid #333 !important;
-    border-radius: 10px !important;
+    border-radius: 12px !important;
+}
+[data-testid="stChatInput"] textarea {
+    background: #252525 !important;
+    border: none !important;
+    border-radius: 12px !important;
     color: #e0e0e0 !important;
     font-family: 'Inter', sans-serif !important;
     font-size: 0.9rem !important;
+    padding: 0.75rem 1rem !important;
 }
 [data-testid="stChatInput"] textarea:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+[data-testid="stChatInput"]:focus-within {
     border-color: #4fc3f7 !important;
     box-shadow: 0 0 0 3px rgba(79,195,247,0.08) !important;
 }
@@ -194,6 +209,7 @@ section[data-testid="stSidebar"] > div {
     border-radius: 8px !important;
     color: #0d0d0d !important;
     border: none !important;
+    margin: 4px !important;
 }
 
 /* ── Sidebar buttons ── */
