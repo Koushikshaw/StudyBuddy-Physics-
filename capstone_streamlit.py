@@ -17,191 +17,169 @@ from agent import (
 st.set_page_config(
     page_title=DOMAIN_NAME,
     page_icon="⚛️",
-    layout="wide",
+    layout="centered",
 )
 
 # ─────────────────────────────────────────────────────────
-# CUSTOM CSS  —  matches the Agentic AI screenshot style
+# CUSTOM CSS
 # ─────────────────────────────────────────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* ── Base ── */
 html, body, [class*="css"] {
-    font-family: 'Inter', sans-serif !important;
-    background: #0e1117 !important;
-    color: #e0e0e0 !important;
-}
-[data-testid="stAppViewContainer"] {
-    background: #0e1117 !important;
-}
-[data-testid="stMain"] {
-    background: #0e1117 !important;
+    font-family: 'Inter', sans-serif;
 }
 
-/* ── Hide Streamlit chrome ── */
-#MainMenu, footer { visibility: hidden; }
-[data-testid="stToolbar"] { display: none; }
+/* ── Hero ── */
+.hero {
+    padding: 2.2rem 0 0.6rem 0;
+    text-align: center;
+}
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 1px solid #2d3561;
+    border-radius: 999px;
+    padding: 0.35rem 1rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #7b9cff;
+    margin-bottom: 1rem;
+}
+.hero-badge-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #7b9cff;
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+.hero h1 {
+    font-size: 2.1rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    letter-spacing: -0.8px;
+    background: linear-gradient(135deg, #ffffff 0%, #a0b4ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.hero p {
+    color: #777;
+    font-size: 0.88rem;
+    margin: 0 auto;
+    max-width: 480px;
+    line-height: 1.6;
+}
+.status-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.76rem;
+    color: #555;
+    padding: 1rem 0 1.2rem 0;
+    justify-content: center;
+}
+.status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #22c55e;
+    display: inline-block;
+}
+
+/* ── Chat meta ── */
+.chat-meta {
+    font-size: 0.74rem;
+    color: #555;
+    margin-top: 0.4rem;
+    padding-left: 0.1rem;
+}
 
 /* ── Sidebar ── */
 section[data-testid="stSidebar"] {
-    background: #1a1c23 !important;
-    border-right: 1px solid #2a2d36 !important;
+    background: #0a0a0a;
+    border-right: 1px solid #1c1c1c;
 }
-section[data-testid="stSidebar"] > div {
-    padding: 1.2rem 1rem !important;
+.sb-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: #444;
+    margin-bottom: 0.6rem;
+    margin-top: 0.2rem;
 }
-section[data-testid="stSidebar"] p,
-section[data-testid="stSidebar"] li,
-section[data-testid="stSidebar"] span,
-section[data-testid="stSidebar"] div {
-    font-size: 0.85rem !important;
-    color: #b0b8c8 !important;
-    line-height: 1.65 !important;
+.sb-desc {
+    font-size: 0.85rem;
+    color: #888;
+    line-height: 1.6;
+    margin-bottom: 0.5rem;
 }
-section[data-testid="stSidebar"] h1,
-section[data-testid="stSidebar"] h2,
-section[data-testid="stSidebar"] h3 {
-    font-size: 0.95rem !important;
-    font-weight: 600 !important;
-    color: #e8eaf0 !important;
+.topic-chip {
+    display: inline-block;
+    background: #141414;
+    border: 1px solid #242424;
+    border-radius: 5px;
+    padding: 3px 10px;
+    font-size: 0.78rem;
+    color: #999;
+    margin: 3px 3px;
 }
-section[data-testid="stSidebar"] hr {
-    border-color: #2a2d36 !important;
-    margin: 0.75rem 0 !important;
+.session-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 1px solid #2d3561;
+    border-radius: 999px;
+    padding: 0.3rem 0.85rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #7b9cff;
+    margin-bottom: 0.5rem;
+}
+.session-badge-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #7b9cff;
+    display: inline-block;
+}
+.session-id {
+    font-family: monospace;
+    color: #aaa;
+    font-size: 0.82rem;
+    text-transform: none;
+    letter-spacing: 0;
 }
 
-/* ── Sidebar buttons ── */
-section[data-testid="stSidebar"] div[data-testid="stButton"] button {
-    background: transparent !important;
-    border: none !important;
-    color: #9099aa !important;
-    font-size: 0.84rem !important;
-    padding: 0.3rem 0 !important;
+/* ── Buttons ── */
+div[data-testid="stButton"] button {
+    background: #0f0f0f !important;
+    border: 1px solid #1e1e1e !important;
+    color: #aaa !important;
+    font-size: 0.82rem !important;
+    padding: 0.35rem 0.7rem !important;
+    border-radius: 6px !important;
     text-align: left !important;
     width: 100% !important;
-    border-radius: 0 !important;
-    transition: color 0.15s !important;
-    box-shadow: none !important;
+    transition: all 0.15s ease !important;
 }
-section[data-testid="stSidebar"] div[data-testid="stButton"] button:hover {
-    color: #ffffff !important;
-    background: transparent !important;
-}
-
-/* ── Main content width ── */
-[data-testid="stMainBlockContainer"] {
-    max-width: 860px !important;
-    padding: 2rem 2rem 1rem !important;
-    margin: 0 auto !important;
-}
-
-/* ── Page title ── */
-.page-title {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    font-size: 2rem;
-    font-weight: 700;
-    color: #f0f2f6;
-    margin-bottom: 0.5rem;
-    letter-spacing: -0.3px;
-}
-.page-subtitle {
-    font-size: 0.9rem;
-    color: #7a8394;
-    line-height: 1.65;
-    margin-bottom: 1.2rem;
-    max-width: 680px;
-}
-
-/* ── KB banner ── */
-.kb-banner {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    background: #1a3a25;
-    border: 1px solid #2d5c3a;
-    border-radius: 8px;
-    padding: 0.8rem 1.1rem;
-    font-size: 0.87rem;
-    color: #4ade80;
-    font-weight: 500;
-    margin-bottom: 1.4rem;
-}
-
-/* ── Chat messages — no card borders, clean bubbles ── */
-[data-testid="stChatMessage"] {
-    background: #181b22 !important;
-    border: 1px solid #22262f !important;
-    border-radius: 10px !important;
-    padding: 0.85rem 1rem !important;
-    margin-bottom: 0.6rem !important;
-}
-[data-testid="stChatMessage"] p {
-    font-size: 0.92rem !important;
-    line-height: 1.72 !important;
-    color: #d8dce8 !important;
-    margin: 0 !important;
-}
-
-/* ── Chat meta (route / sources) ── */
-.chat-meta {
-    font-size: 0.75rem;
-    color: #4a5260;
-    margin-top: 0.45rem;
-}
-
-/* ── Chat input container ── */
-[data-testid="stBottom"] {
-    background: #0e1117 !important;
-    border-top: none !important;
-    padding: 0.5rem 0 1rem !important;
-}
-[data-testid="stChatInput"] {
-    background: #181b22 !important;
-    border: 1px solid #2a2d36 !important;
-    border-radius: 10px !important;
-    transition: border-color 0.2s !important;
-}
-[data-testid="stChatInput"]:focus-within {
-    border-color: #e05252 !important;
-}
-[data-testid="stChatInput"] textarea {
-    background: transparent !important;
-    border: none !important;
-    color: #d8dce8 !important;
-    font-family: 'Inter', sans-serif !important;
-    font-size: 0.9rem !important;
-    padding: 0.8rem 1rem !important;
-    caret-color: #e05252 !important;
-    resize: none !important;
-}
-[data-testid="stChatInput"] textarea::placeholder {
-    color: #4a5260 !important;
-}
-[data-testid="stChatInput"] textarea:focus {
-    outline: none !important;
-    box-shadow: none !important;
-}
-[data-testid="stChatInput"] button {
-    background: #3b82f6 !important;
-    border-radius: 7px !important;
+div[data-testid="stButton"] button:hover {
+    border-color: #3d3d3d !important;
     color: #fff !important;
-    border: none !important;
-    margin: 5px !important;
-    transition: background 0.15s !important;
-}
-[data-testid="stChatInput"] button:hover {
-    background: #2563eb !important;
+    background: #161616 !important;
 }
 
-/* ── Spinner ── */
-[data-testid="stSpinner"] p {
-    color: #4a5260 !important;
-    font-size: 0.82rem !important;
-}
+hr { border-color: #1a1a1a !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -227,6 +205,24 @@ except Exception as e:
     st.stop()
 
 # ─────────────────────────────────────────────────────────
+# HERO
+# ─────────────────────────────────────────────────────────
+st.markdown(f"""
+<div class="hero">
+    <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        AI · Physics · B.Tech
+    </div>
+    <h1>{DOMAIN_NAME}</h1>
+    <p>{DOMAIN_DESCRIPTION}</p>
+</div>
+<div class="status-bar">
+    <span class="status-dot"></span>
+    <span>{kb_count} chunks indexed &nbsp;·&nbsp; Groq LLaMA 3.3 · LangGraph · RAG</span>
+</div>
+""", unsafe_allow_html=True)
+
+# ─────────────────────────────────────────────────────────
 # SESSION STATE
 # ─────────────────────────────────────────────────────────
 if "messages" not in st.session_state:
@@ -238,25 +234,36 @@ if "thread_id" not in st.session_state:
 # SIDEBAR
 # ─────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("### ℹ️ About")
-    st.write(DOMAIN_DESCRIPTION)
-    st.divider()
 
-    st.markdown(f"**Session ID:** `{st.session_state.thread_id}`")
-    st.divider()
-
-    st.markdown("### 🗂️ Topics covered:")
-    for topic in KB_TOPICS:
-        st.write(f"• {topic.replace('_', ' ')}")
-    st.divider()
-
+    # ── Session badge at top ──
+    st.markdown(f"""
+    <div class="session-badge">
+        <span class="session-badge-dot"></span>
+        Session &nbsp;<span class="session-id">{st.session_state.thread_id}</span>
+    </div>
+    """, unsafe_allow_html=True)
     if st.button("🗑️ New chat", use_container_width=True):
         st.session_state.messages = []
         st.session_state.thread_id = str(uuid.uuid4())[:8]
         st.rerun()
+
     st.divider()
 
-    st.markdown("**💡 Try asking:**")
+    # ── About ──
+    st.markdown('<div class="sb-label">About</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="sb-desc">{DOMAIN_DESCRIPTION}</div>', unsafe_allow_html=True)
+
+    st.divider()
+
+    # ── Topics ──
+    st.markdown('<div class="sb-label">Topics Covered</div>', unsafe_allow_html=True)
+    chips = "".join(f'<span class="topic-chip">{t}</span>' for t in KB_TOPICS)
+    st.markdown(chips, unsafe_allow_html=True)
+
+    st.divider()
+
+    # ── Example questions ──
+    st.markdown('<div class="sb-label">Try Asking</div>', unsafe_allow_html=True)
     example_questions = [
         "What is Simple Harmonic Motion?",
         "Explain damped harmonic motion",
@@ -270,15 +277,6 @@ with st.sidebar:
         if st.button(eq, key=eq):
             st.session_state._inject_question = eq
             st.rerun()
-
-# ─────────────────────────────────────────────────────────
-# MAIN AREA — title + KB banner
-# ─────────────────────────────────────────────────────────
-st.markdown(f"""
-<div class="page-title">⚛️ {DOMAIN_NAME}</div>
-<div class="page-subtitle">{DOMAIN_DESCRIPTION}</div>
-<div class="kb-banner">✅ &nbsp;Knowledge base loaded — {kb_count} chunks indexed</div>
-""", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────
 # CHAT HISTORY
