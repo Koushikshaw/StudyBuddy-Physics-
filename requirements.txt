@@ -10,3 +10,4 @@ pypdf
 numpy
 protobuf>=4.25.0,<5.0.0
 duckduckgo-search
+sentence-transformers
