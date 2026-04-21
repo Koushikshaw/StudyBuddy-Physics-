@@ -21,94 +21,80 @@ st.set_page_config(
 )
 
 # ─────────────────────────────────────────────────────────
-# CUSTOM CSS
+# CUSTOM CSS  —  matches the Agentic AI screenshot style
 # ─────────────────────────────────────────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
+/* ── Base ── */
 html, body, [class*="css"] {
-    font-family: 'Inter', sans-serif;
-    background: #1a1a1a;
-    color: #e0e0e0;
+    font-family: 'Inter', sans-serif !important;
+    background: #0e1117 !important;
+    color: #e0e0e0 !important;
+}
+[data-testid="stAppViewContainer"] {
+    background: #0e1117 !important;
+}
+[data-testid="stMain"] {
+    background: #0e1117 !important;
 }
 
-/* ── Hide default Streamlit chrome ── */
+/* ── Hide Streamlit chrome ── */
 #MainMenu, footer { visibility: hidden; }
 [data-testid="stToolbar"] { display: none; }
 
 /* ── Sidebar ── */
 section[data-testid="stSidebar"] {
-    background: #222222 !important;
-    border-right: 1px solid #2e2e2e !important;
-    padding-top: 1.2rem;
+    background: #1a1c23 !important;
+    border-right: 1px solid #2a2d36 !important;
 }
 section[data-testid="stSidebar"] > div {
-    padding: 1rem 1.2rem;
+    padding: 1.2rem 1rem !important;
+}
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] li,
+section[data-testid="stSidebar"] span,
+section[data-testid="stSidebar"] div {
+    font-size: 0.85rem !important;
+    color: #b0b8c8 !important;
+    line-height: 1.65 !important;
+}
+section[data-testid="stSidebar"] h1,
+section[data-testid="stSidebar"] h2,
+section[data-testid="stSidebar"] h3 {
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    color: #e8eaf0 !important;
+}
+section[data-testid="stSidebar"] hr {
+    border-color: #2a2d36 !important;
+    margin: 0.75rem 0 !important;
 }
 
-.sb-section-title {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: #e0e0e0;
-    margin-bottom: 0.55rem;
+/* ── Sidebar buttons ── */
+section[data-testid="stSidebar"] div[data-testid="stButton"] button {
+    background: transparent !important;
+    border: none !important;
+    color: #9099aa !important;
+    font-size: 0.84rem !important;
+    padding: 0.3rem 0 !important;
+    text-align: left !important;
+    width: 100% !important;
+    border-radius: 0 !important;
+    transition: color 0.15s !important;
+    box-shadow: none !important;
 }
-.sb-section-title .icon {
-    font-size: 1rem;
-}
-.sb-desc {
-    font-size: 0.83rem;
-    color: #aaaaaa;
-    line-height: 1.65;
-    margin-bottom: 0.2rem;
-}
-.sb-label {
-    font-size: 0.72rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1.1px;
-    color: #666;
-    margin-bottom: 0.5rem;
-    margin-top: 0.2rem;
-}
-.session-row {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.35rem;
-}
-.session-label {
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: #cccccc;
-}
-.session-id {
-    font-family: 'Courier New', monospace;
-    font-size: 0.82rem;
-    color: #4fc3f7;
-    background: #1a2a35;
-    border-radius: 4px;
-    padding: 1px 7px;
-}
-.topic-item {
-    font-size: 0.83rem;
-    color: #aaaaaa;
-    padding: 2px 0 2px 0.3rem;
-    line-height: 1.7;
-}
-.topic-item::before {
-    content: "• ";
-    color: #555;
+section[data-testid="stSidebar"] div[data-testid="stButton"] button:hover {
+    color: #ffffff !important;
+    background: transparent !important;
 }
 
-/* ── Main area ── */
-.main-wrap {
-    max-width: 820px;
-    margin: 0 auto;
-    padding: 2rem 1rem 1rem;
+/* ── Main content width ── */
+[data-testid="stMainBlockContainer"] {
+    max-width: 860px !important;
+    padding: 2rem 2rem 1rem !important;
+    margin: 0 auto !important;
 }
 
 /* ── Page title ── */
@@ -118,123 +104,102 @@ section[data-testid="stSidebar"] > div {
     gap: 0.6rem;
     font-size: 2rem;
     font-weight: 700;
-    color: #f0f0f0;
-    margin-bottom: 0.45rem;
-    letter-spacing: -0.5px;
-}
-.page-title .icon {
-    font-size: 1.9rem;
+    color: #f0f2f6;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.3px;
 }
 .page-subtitle {
-    font-size: 0.88rem;
-    color: #888;
-    line-height: 1.6;
+    font-size: 0.9rem;
+    color: #7a8394;
+    line-height: 1.65;
     margin-bottom: 1.2rem;
-    max-width: 640px;
+    max-width: 680px;
 }
 
-/* ── KB status banner ── */
+/* ── KB banner ── */
 .kb-banner {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.65rem;
     background: #1a3a25;
-    border: 1px solid #2a5a35;
+    border: 1px solid #2d5c3a;
     border-radius: 8px;
-    padding: 0.75rem 1.1rem;
-    font-size: 0.86rem;
+    padding: 0.8rem 1.1rem;
+    font-size: 0.87rem;
     color: #4ade80;
-    margin-bottom: 1.6rem;
     font-weight: 500;
-}
-.kb-banner .check {
-    font-size: 1rem;
+    margin-bottom: 1.4rem;
 }
 
-/* ── Chat messages ── */
+/* ── Chat messages — no card borders, clean bubbles ── */
 [data-testid="stChatMessage"] {
-    background: #252525 !important;
-    border: 1px solid #2e2e2e !important;
+    background: #181b22 !important;
+    border: 1px solid #22262f !important;
     border-radius: 10px !important;
-    padding: 0.9rem 1rem !important;
-    margin-bottom: 0.75rem !important;
+    padding: 0.85rem 1rem !important;
+    margin-bottom: 0.6rem !important;
 }
 [data-testid="stChatMessage"] p {
-    font-size: 0.91rem !important;
-    line-height: 1.7 !important;
-    color: #d8d8d8 !important;
+    font-size: 0.92rem !important;
+    line-height: 1.72 !important;
+    color: #d8dce8 !important;
+    margin: 0 !important;
 }
 
-/* ── Chat meta line ── */
+/* ── Chat meta (route / sources) ── */
 .chat-meta {
-    font-size: 0.74rem;
-    color: #555;
-    margin-top: 0.4rem;
-    padding-left: 0.1rem;
+    font-size: 0.75rem;
+    color: #4a5260;
+    margin-top: 0.45rem;
 }
 
-/* ── Chat input ── */
+/* ── Chat input container ── */
 [data-testid="stBottom"] {
-    background: #1a1a1a !important;
-    border-top: 1px solid #2e2e2e !important;
-    padding: 0.75rem 1rem !important;
+    background: #0e1117 !important;
+    border-top: none !important;
+    padding: 0.5rem 0 1rem !important;
 }
 [data-testid="stChatInput"] {
-    background: #252525 !important;
-    border: 1px solid #333 !important;
-    border-radius: 12px !important;
+    background: #181b22 !important;
+    border: 1px solid #2a2d36 !important;
+    border-radius: 10px !important;
+    transition: border-color 0.2s !important;
+}
+[data-testid="stChatInput"]:focus-within {
+    border-color: #e05252 !important;
 }
 [data-testid="stChatInput"] textarea {
-    background: #252525 !important;
+    background: transparent !important;
     border: none !important;
-    border-radius: 12px !important;
-    color: #e0e0e0 !important;
+    color: #d8dce8 !important;
     font-family: 'Inter', sans-serif !important;
     font-size: 0.9rem !important;
-    padding: 0.75rem 1rem !important;
+    padding: 0.8rem 1rem !important;
+    caret-color: #e05252 !important;
+    resize: none !important;
+}
+[data-testid="stChatInput"] textarea::placeholder {
+    color: #4a5260 !important;
 }
 [data-testid="stChatInput"] textarea:focus {
     outline: none !important;
     box-shadow: none !important;
 }
-[data-testid="stChatInput"]:focus-within {
-    border-color: #4fc3f7 !important;
-    box-shadow: 0 0 0 3px rgba(79,195,247,0.08) !important;
-}
-[data-testid="stChatInput"] textarea::placeholder {
-    color: #555 !important;
-}
 [data-testid="stChatInput"] button {
-    background: #4fc3f7 !important;
-    border-radius: 8px !important;
-    color: #0d0d0d !important;
-    border: none !important;
-    margin: 4px !important;
-}
-
-/* ── Sidebar buttons ── */
-div[data-testid="stButton"] button {
-    background: #1e1e1e !important;
-    border: 1px solid #2e2e2e !important;
-    color: #999 !important;
-    font-size: 0.82rem !important;
-    padding: 0.35rem 0.7rem !important;
-    border-radius: 6px !important;
-    text-align: left !important;
-    width: 100% !important;
-    transition: all 0.15s ease !important;
-}
-div[data-testid="stButton"] button:hover {
-    border-color: #444 !important;
+    background: #3b82f6 !important;
+    border-radius: 7px !important;
     color: #fff !important;
-    background: #2a2a2a !important;
+    border: none !important;
+    margin: 5px !important;
+    transition: background 0.15s !important;
 }
-
-hr { border-color: #2a2a2a !important; }
+[data-testid="stChatInput"] button:hover {
+    background: #2563eb !important;
+}
 
 /* ── Spinner ── */
 [data-testid="stSpinner"] p {
-    color: #666 !important;
+    color: #4a5260 !important;
     font-size: 0.82rem !important;
 }
 </style>
@@ -273,39 +238,25 @@ if "thread_id" not in st.session_state:
 # SIDEBAR
 # ─────────────────────────────────────────────────────────
 with st.sidebar:
-
-    # About
-    st.markdown(f"""
-    <div class="sb-section-title"><span class="icon">ℹ️</span> About</div>
-    <div class="sb-desc">{DOMAIN_DESCRIPTION}</div>
-    """, unsafe_allow_html=True)
-
+    st.markdown("### ℹ️ About")
+    st.write(DOMAIN_DESCRIPTION)
     st.divider()
 
-    # Session ID
-    st.markdown(f"""
-    <div class="session-row">
-        <span class="session-label">Session ID:</span>
-        <span class="session-id">{st.session_state.thread_id}</span>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(f"**Session ID:** `{st.session_state.thread_id}`")
+    st.divider()
+
+    st.markdown("### 🗂️ Topics covered:")
+    for topic in KB_TOPICS:
+        st.write(f"• {topic.replace('_', ' ')}")
+    st.divider()
 
     if st.button("🗑️ New chat", use_container_width=True):
         st.session_state.messages = []
         st.session_state.thread_id = str(uuid.uuid4())[:8]
         st.rerun()
-
     st.divider()
 
-    # Topics
-    st.markdown('<div class="sb-section-title"><span class="icon">🗂️</span> Topics covered:</div>', unsafe_allow_html=True)
-    topics_html = "".join(f'<div class="topic-item">{t.replace("_", " ")}</div>' for t in KB_TOPICS)
-    st.markdown(topics_html, unsafe_allow_html=True)
-
-    st.divider()
-
-    # Example questions
-    st.markdown('<div class="sb-label">Try Asking</div>', unsafe_allow_html=True)
+    st.markdown("**💡 Try asking:**")
     example_questions = [
         "What is Simple Harmonic Motion?",
         "Explain damped harmonic motion",
@@ -321,19 +272,12 @@ with st.sidebar:
             st.rerun()
 
 # ─────────────────────────────────────────────────────────
-# MAIN AREA
+# MAIN AREA — title + KB banner
 # ─────────────────────────────────────────────────────────
 st.markdown(f"""
-<div class="main-wrap">
-    <div class="page-title">
-        <span class="icon">⚛️</span>{DOMAIN_NAME}
-    </div>
-    <div class="page-subtitle">{DOMAIN_DESCRIPTION}</div>
-    <div class="kb-banner">
-        <span class="check">✅</span>
-        Knowledge base loaded — {kb_count} chunks indexed
-    </div>
-</div>
+<div class="page-title">⚛️ {DOMAIN_NAME}</div>
+<div class="page-subtitle">{DOMAIN_DESCRIPTION}</div>
+<div class="kb-banner">✅ &nbsp;Knowledge base loaded — {kb_count} chunks indexed</div>
 """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────
