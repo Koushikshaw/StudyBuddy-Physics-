@@ -376,7 +376,16 @@ FORMAT YOUR ANSWER LIKE THIS (when applicable):
 5. Example (if possible):
    - Simple real-world or textbook example
 
-Use bullet points and clean formatting.
+FORMATTING RULES:
+- Use Markdown headings and bullet points.
+- Use $...$ for inline equations.
+- Use $$...$$ for standalone equations, each on separate lines.
+- Do not wrap equations in square brackets.
+- Use proper LaTeX syntax for Greek letters, subscripts, and units.
+- Use multiplication symbols or adjacent factors, not commas.
+- Keep clear spacing between headings, lists, and equations.
+- Never put the entire answer inside a code block.
+
 
 {context}{retry_note}"""
         else:
