@@ -180,7 +180,19 @@ Current question: {question}
 
 Reply with ONLY ONE WORD: retrieve OR memory_only OR tool OR chat
 """
-        response = llm.invoke(prompt)
+        #response = llm.invoke(prompt)
+        
+        
+        try:
+            response = llm.invoke(prompt)
+        except Exception as e:
+            print("ERROR TYPE:", type(e).__name__)
+            print("STATUS CODE:", getattr(e, "status_code", None))
+            print("ERROR BODY:", getattr(e, "body", None))
+            print("ERROR MESSAGE:", str(e))
+            raise
+        
+        
         decision = response.content.strip().lower()
         if "memory" in decision:
             decision = "memory_only"
